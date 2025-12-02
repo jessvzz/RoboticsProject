@@ -8,4 +8,6 @@ Now we can open two terminals, and run:
 Terminal 1 >> `ros2 run hello_world_package publisher`  
 Terminal 2 >> `ros2 run hello_world_package subscriber`
 
-We should now see the two nodes starting to exchange messages. 
+We should now see the two nodes starting to exchange messages.
+
+Moving on we should create our own packages for every part of the application
