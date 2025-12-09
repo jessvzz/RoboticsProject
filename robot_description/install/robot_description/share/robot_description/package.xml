@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>robot_description</name>
+  <version>0.0.0</version>
+  <description>Robot description resources (URDF/xacro, launch files, RViz configs)</description>
+  <maintainer email="americo@todo.todo">americo</maintainer>
+  <license>MIT</license>
+
+  <!-- build tool -->
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <!-- build/runtime dependencies -->
+  <build_depend>rclpy</build_depend>
+  <build_depend>xacro</build_depend>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>robot_state_publisher</exec_depend>
+  <exec_depend>joint_state_publisher_gui</exec_depend>
+  <exec_depend>rviz2</exec_depend>
+  <exec_depend>xacro</exec_depend>
+  <exec_depend>ros2launch</exec_depend>
+
+  <!-- test dependencies -->
+  <test_depend>pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

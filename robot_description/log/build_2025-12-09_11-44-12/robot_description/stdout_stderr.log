@@ -1,0 +1,21 @@
+running egg_info
+creating build/robot_description/robot_description.egg-info
+writing build/robot_description/robot_description.egg-info/PKG-INFO
+writing dependency_links to build/robot_description/robot_description.egg-info/dependency_links.txt
+writing requirements to build/robot_description/robot_description.egg-info/requires.txt
+writing top-level names to build/robot_description/robot_description.egg-info/top_level.txt
+writing manifest file 'build/robot_description/robot_description.egg-info/SOURCES.txt'
+reading manifest file 'build/robot_description/robot_description.egg-info/SOURCES.txt'
+writing manifest file 'build/robot_description/robot_description.egg-info/SOURCES.txt'
+running build
+running install
+running install_data
+creating /home/americo/coding/ros2_ws/src/robot_description/install/robot_description/share/ament_index
+creating /home/americo/coding/ros2_ws/src/robot_description/install/robot_description/share/ament_index/resource_index
+creating /home/americo/coding/ros2_ws/src/robot_description/install/robot_description/share/ament_index/resource_index/packages
+copying resource/robot_description -> /home/americo/coding/ros2_ws/src/robot_description/install/robot_description/share/ament_index/resource_index/packages
+copying package.xml -> /home/americo/coding/ros2_ws/src/robot_description/install/robot_description/share/robot_description
+running install_egg_info
+Copying build/robot_description/robot_description.egg-info to /home/americo/coding/ros2_ws/src/robot_description/install/robot_description/lib/python3.12/site-packages/robot_description-0.0.0-py3.12.egg-info
+running install_scripts
+writing list of installed files to '/home/americo/coding/ros2_ws/src/robot_description/build/robot_description/install.log'
