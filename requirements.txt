@@ -1,0 +1,12 @@
+# May be missing some packages required by recently edited files
+# If you find missing packages, please add them here
+
+# To sink your requirements, inside a virtual environment (recommended), run:
+# pip install --upgrade pip
+# pip install -r requirements.txt
+
+
+apriltag 
+opencv-python 
+numpy
+pupil-apriltags

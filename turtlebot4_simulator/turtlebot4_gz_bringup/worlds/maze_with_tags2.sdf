@@ -14,9 +14,11 @@
         <!--<plugin name="gz::sim::systems::Sensors" filename="gz-sim-sensors-system">
             <render_engine>ogre2</render_engine>
         </plugin>-->
+
         <include>
-          <uri>model://Apriltag36_11_00013</uri>
-          <pose>-2.5042032026144825 0.2099361296421059 .3 1.57 0 1.57</pose>
+          <uri>package://april_tag_detection/april_tags_models/Apriltag36_11_00012</uri>
+          <name>tag36_11_00012</name>
+          <pose>-2.5042032026144825 0.2099361296421059 0 0 0 0</pose>
         </include>
 
         <light name='sun' type='directional'>
@@ -1052,3 +1054,4 @@
         </model>
     </world>
 </sdf>
+ 

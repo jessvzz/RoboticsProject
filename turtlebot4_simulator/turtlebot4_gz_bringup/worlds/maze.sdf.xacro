@@ -1,5 +1,9 @@
 <?xml version="1.0"?>
-<sdf version='1.8'>
+<sdf version="1.8" xmlns:xacro="http://ros.org/wiki/xacro">
+    <!--
+      Xacro-enabled version of maze.sdf
+    -->
+
     <world name='maze'>
         <physics name='1ms' type='ignored'>
             <max_step_size>0.003</max_step_size>
@@ -11,12 +15,16 @@
         <plugin name="gz::sim::systems::UserCommands" filename="gz-sim-user-commands-system" />
         <plugin name="gz::sim::systems::SceneBroadcaster" filename="gz-sim-scene-broadcaster-system" />
         <plugin name="gz::sim::systems::Contact" filename="gz-sim-contact-system" />
-        <!--<plugin name="gz::sim::systems::Sensors" filename="gz-sim-sensors-system">
-            <render_engine>ogre2</render_engine>
-        </plugin>-->
+        <!--
         <include>
-          <uri>model://Apriltag36_11_00013</uri>
-          <pose>-2.5042032026144825 0.2099361296421059 .3 1.57 0 1.57</pose>
+          <uri>package://${pkg}/models/${model}/model.sdf</uri>
+          <name>tag36_11_00012</name>
+          <pose>-2.5042032026144825 0.2099361296421059 0 0 0 0</pose>
+        </include>
+        -->
+
+        <include>
+            <uri>model://Apriltag36_11_00013</uri>
         </include>
 
         <light name='sun' type='directional'>

@@ -22,7 +22,7 @@ from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
-from launch.actions import IncludeLaunchDescription, SetEnvironmentVariable
+from launch.actions import IncludeLaunchDescription, SetEnvironmentVariable, ExecuteProcess
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
@@ -34,6 +34,8 @@ ARGUMENTS = [
                           description='use_sim_time'),
     DeclareLaunchArgument('world', default_value='warehouse',
                           description='Simulation World'),
+    DeclareLaunchArgument('rendered_world', default_value='/tmp/maze.sdf',
+                          description='Path to rendered SDF from xacro'),
     DeclareLaunchArgument('model', default_value='lite',
                           choices=['standard', 'lite'],
                           description='Turtlebot4 Model'),
@@ -65,7 +67,8 @@ def generate_launch_description():
             os.path.join(pkg_turtlebot4_gz_bringup, 'worlds'),
             os.path.join(pkg_irobot_create_gz_bringup, 'worlds'),
             str(Path(pkg_turtlebot4_description).parent.resolve()),
-            str(Path(pkg_irobot_create_description).parent.resolve())
+            str(Path(pkg_irobot_create_description).parent.resolve()),
+            os.path.join(get_package_share_directory('assets'), 'models')
         ])
     )
 
@@ -80,7 +83,7 @@ def generate_launch_description():
     # Paths
     gz_sim_launch = PathJoinSubstitution(
         [pkg_ros_gz_sim, 'launch', 'gz_sim.launch.py'])
-
+    
     # Gazebo harmonic
     gazebo = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([gz_sim_launch]),
@@ -109,10 +112,28 @@ def generate_launch_description():
                             '/clock' + '@rosgraph_msgs/msg/Clock' + '[gz.msgs.Clock'
                         ])
 
+    # render xacro to an SDF file before starting Gazebo
+    ### xacro_input = PathJoinSubstitution([
+    ###     pkg_turtlebot4_gz_bringup,
+    ###     'worlds',
+    ###     'maze.sdf.xacro'
+    ### ])
+
+    ### xacro_render = ExecuteProcess(
+    ###     cmd=[
+    ###         'xacro',
+    ###         xacro_input,
+    ###         '-o',
+    ###         LaunchConfiguration('rendered_world')
+    ###     ],
+    ###     output='screen'
+    ### )
+
     # Create launch description and add actions
     ld = LaunchDescription(ARGUMENTS)
     ld.add_action(gz_resource_path)
     ld.add_action(gz_gui_plugin_path)
+    ### ld.add_action(xacro_render)
     ld.add_action(gazebo)
     ld.add_action(clock_bridge)
     return ld
