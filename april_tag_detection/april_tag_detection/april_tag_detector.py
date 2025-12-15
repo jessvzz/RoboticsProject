@@ -1,11 +1,13 @@
-#!/usr/bin/env python3 
-""" 
+#!/usr/bin/env python3
+"""
+MAKE SURE TO RUN:
 sudo apt install ros-jazzy-cv-bridge
 sudo apt install ros-jazzy-image-transport
 
 pip install pupil-apriltags
 pip install apriltag opencv-python numpy
 
+--------
 
 AprilTag position estimation node (ROS 2 Jazzy, Python).
 
@@ -19,12 +21,16 @@ This node:
 Orientation is intentionally ignored.
 """
 
-from typing import Optional, List
+import sys
+print(sys.executable)
+
+from typing import Optional, List, cast
 
 import rclpy
 from rclpy.node import Node
 
 import numpy as np
+import numpy.typing as npt
 import cv2
 from cv_bridge import CvBridge
 
@@ -32,7 +38,14 @@ from sensor_msgs.msg import Image, CameraInfo
 from geometry_msgs.msg import PointStamped
 from std_msgs.msg import Header
 
-from pupil_apriltags import Detector
+from pupil_apriltags import Detector, Detection
+
+# topics published by turtlebot
+CAMERA_RAW_TOPIC = "/oakd/rgb/preview/image_raw"
+CAMERA_INFO_TOPIC = "/oakd/rgb/preview/camera_info"
+
+# link frame of the camera, used for publishing PointStamped
+CAMERA_LINK = "oakd_link"
 
 class AprilTagPositionNode(Node):
     """
@@ -41,28 +54,34 @@ class AprilTagPositionNode(Node):
     """
 
     def __init__(self) -> None:
-        super().__init__("apriltag_position_node")
+        super().__init__("apriltag_detector")
 
         # --- ROS infrastructure ---
         self._bridge: CvBridge = CvBridge()
 
         self._image_sub = self.create_subscription(
             Image,
-            "/camera/image_raw",
+            CAMERA_RAW_TOPIC,
             self.image_callback,
             10,
         )
 
         self._camera_info_sub = self.create_subscription(
             CameraInfo,
-            "/camera/camera_info",
+            CAMERA_INFO_TOPIC,
             self.camera_info_callback,
             10,
         )
 
         self._point_pub = self.create_publisher(
             PointStamped,
-            "/apriltag/position",
+            "/apriltag_detection/position",
+            10,
+        )
+
+        self._debug_image_pub = self.create_publisher(
+            Image,
+            "/apriltag_detection/debug_image",
             10,
         )
 
@@ -71,19 +90,21 @@ class AprilTagPositionNode(Node):
             families="tag36h11",
             nthreads=2,
             quad_decimate=2.0,
-            refine_edges=True,
+            refine_edges=True
         )
 
+
         # --- Camera intrinsics (filled from CameraInfo) ---
-        self._fx: Optional[float] = None
-        self._fy: Optional[float] = None
-        self._cx: Optional[float] = None
-        self._cy: Optional[float] = None
+        self._fx: float = 554.0
+        self._fy: float = 554.0
+        self._cx: float = 320.0
+        self._cy: float = 240.0
+        self._received_caminfo = False
 
         # --- Known physical size of the tag (meters) ---
         self._tag_size_m: float = 0.16  # CHANGE to match your tags
 
-        self.get_logger().info("AprilTag position node started")
+        self.get_logger().info("AprilTag detector node started")
 
     # ------------------------------------------------------------------
     # Callbacks
@@ -94,7 +115,7 @@ class AprilTagPositionNode(Node):
         Stores camera intrinsic parameters from CameraInfo.
         Only needs to run once.
         """
-        if self._fx is not None:
+        if self._received_caminfo:
             return
 
         self._fx = msg.k[0]
@@ -102,6 +123,7 @@ class AprilTagPositionNode(Node):
         self._cx = msg.k[2]
         self._cy = msg.k[5]
 
+        self._received_caminfo = True
         self.get_logger().info("Camera intrinsics received")
 
     def image_callback(self, msg: Image) -> None:
@@ -110,65 +132,97 @@ class AprilTagPositionNode(Node):
         and publishes estimated positions.
         """
         # Ensure camera intrinsics are available
-        if self._fx is None:
+        if not self._received_caminfo:
             return
-
+    
         # Convert ROS image → OpenCV grayscale image
         gray_image: np.ndarray = self._bridge.imgmsg_to_cv2(
             msg, desired_encoding="mono8"
         )
 
-        # Detect AprilTags
-        detections = self._detector.detect(gray_image)
+        # Convert to color for drawing
+        color_image: np.ndarray = cv2.cvtColor(gray_image, cv2.COLOR_GRAY2BGR)
 
-        for detection in detections:
-            self._publish_tag_position(detection, msg.header)
+        # Detect AprilTags
+        # NOTE: return type of detect method is broken, it actually returns a list of detection, not just one Detection object 
+        detections: List[Detection] = self._detector.detect(
+            gray_image,
+            estimate_tag_pose=True,
+            tag_size=self._tag_size_m,
+            camera_params=(self._fx, self._fy, self._cx, self._cy)
+        )
+        
+        for dec in detections:
+            self._publish_tag_position(dec, msg.header)
+            self._draw_detection(color_image, dec)
+
+        # Publish debug image
+        debug_msg = self._bridge.cv2_to_imgmsg(color_image, encoding="bgr8")
+        debug_msg.header = msg.header
+        self._debug_image_pub.publish(debug_msg)
 
     # ------------------------------------------------------------------
     # Position estimation
     # ------------------------------------------------------------------
 
-    def _publish_tag_position(self, detection, header: Header) -> None:
+    def _publish_tag_position(self, detection: Detection, header: Header) -> None:
         """
         Estimates the 3D position of a detected AprilTag and publishes it.
         """
-
-        # Pixel coordinates of the tag center
-        u: float = float(detection.center[0])
-        v: float = float(detection.center[1])
-
-        # Corner pixels of the tag (4x2 array)
-        corners: np.ndarray = detection.corners
-
-        # Estimate tag size in pixels (average side length)
-        side_lengths: List[float] = [
-            float(np.linalg.norm(corners[i] - corners[(i + 1) % 4]))
-            for i in range(4)
-        ]
-        tag_size_px: float = float(np.mean(side_lengths))
-
-        # Reject very small detections (too noisy)
-        if tag_size_px < 15.0:
+        
+        ok = isinstance(self._tag_size_m, float) and \
+                isinstance(self._fx, float) and \
+                isinstance(self._fy, float) and \
+                isinstance(self._cx, float) and \
+                isinstance(self._cy, float)
+        if not ok:
+            self.get_logger().error("Camera intrinsics or tag size not set")
             return
-
-        # Depth estimation (Z)
-        # Z = (real_tag_size * focal_length) / observed_pixel_size
-        Z: float = (self._tag_size_m * self._fx) / tag_size_px
-
-        # Back-project pixel to 3D camera coordinates
-        X: float = (u - self._cx) * Z / self._fx
-        Y: float = (v - self._cy) * Z / self._fy
-
-        # Create and publish PointStamped
-        point_msg: PointStamped = PointStamped()
+        
+        # some magic to get the type hints working
+        pose_t: npt.NDArray[np.float64]  # shape=(3,1) 
+        pose_t = cast(np.ndarray, detection.pose_t)
+        if pose_t is None:
+            self.get_logger().error("Tag pose could not be estimated")
+            return
+        
+        X, Y, Z = pose_t.flatten()  # 3D position in camera frame
+        point_msg = PointStamped()
         point_msg.header = header
         point_msg.header.frame_id = "camera_link"
-
-        point_msg.point.x = X
-        point_msg.point.y = Y
-        point_msg.point.z = Z
-
+        point_msg.point.x = float(X)
+        point_msg.point.y = float(Y)
+        point_msg.point.z = float(Z)
         self._point_pub.publish(point_msg)
+
+    # ------------------------------------------------------------------
+    # Draw detected tags
+    # ------------------------------------------------------------------
+    def _draw_detection(self, image: np.ndarray, detection: Detection) -> None:
+        """Draw bounding box, center, and ID of the AprilTag on the image."""
+        corners = detection.corners.astype(int)
+        center = tuple(detection.center.astype(int))
+
+        # Draw tag outline (green)
+        for i in range(4):
+            pt1 = tuple(corners[i])
+            pt2 = tuple(corners[(i + 1) % 4])
+            cv2.line(image, pt1, pt2, (0, 255, 0), 2)
+
+        # Draw center (red)
+        cv2.circle(image, center, 4, (0, 0, 255), -1)
+
+        # Draw tag ID (blue)
+        cv2.putText(
+            image,
+            f"ID {detection.tag_id}",
+            (center[0] + 10, center[1] - 10),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.5,
+            (255, 0, 0),
+            2,
+        )
+
 
 
 # ----------------------------------------------------------------------

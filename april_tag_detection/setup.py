@@ -11,7 +11,12 @@ setup(
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml'])
     ],
-    install_requires=['setuptools'],
+    install_requires=[
+        'setuptools',
+        'numpy',
+        'opencv-python',
+        'pupil-apriltags',
+    ],
     zip_safe=True,
     maintainer='americo',
     maintainer_email='americo.cherubini2003@gmail.com',
@@ -24,6 +29,8 @@ setup(
     },
     entry_points={
         'console_scripts': [
+            # This defines the "executable" name
+            f'start_detection = {package_name}.april_tag_detector:main',
         ],
     },
 )

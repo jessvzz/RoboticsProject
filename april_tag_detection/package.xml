@@ -15,6 +15,15 @@
   <test_depend>ament_pep257</test_depend>
   <test_depend>python3-pytest</test_depend>
 
+
+  <!-- Debug / visualization -->
+  <exec_depend>ros-jazzy-rqt-image-view</exec_depend>
+
+  <!-- OpenCV (Python system package) -->
+  <exec_depend>python3-opencv</exec_depend>
+
+
+
   <export>
     <build_type>ament_python</build_type>
   </export>
