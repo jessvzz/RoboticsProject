@@ -5,6 +5,7 @@
 # pip install --upgrade pip
 # pip install -r requirements.txt
 
+# PS Is this file useless? requirements should already be defined in the setup.py file
 
 apriltag 
 opencv-python 

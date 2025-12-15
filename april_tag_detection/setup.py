@@ -31,6 +31,7 @@ setup(
         'console_scripts': [
             # This defines the "executable" name
             f'start_detection = {package_name}.april_tag_detector:main',
+            f'start_mapping_srv = {package_name}.april_tag_mapper:main'
         ],
     },
 )

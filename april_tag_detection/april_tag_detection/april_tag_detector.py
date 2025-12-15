@@ -1,4 +1,5 @@
-#!/usr/bin/env python3
+#!/home/americo/coding/ros2_ws/.venv/bin/python3
+# #!/usr/bin/env python3
 """
 MAKE SURE TO RUN:
 sudo apt install ros-jazzy-cv-bridge
@@ -40,6 +41,8 @@ from std_msgs.msg import Header
 
 from pupil_apriltags import Detector, Detection
 
+from .utils import rate_limit
+
 # topics published by turtlebot
 CAMERA_RAW_TOPIC = "/oakd/rgb/preview/image_raw"
 CAMERA_INFO_TOPIC = "/oakd/rgb/preview/camera_info"
@@ -75,7 +78,7 @@ class AprilTagPositionNode(Node):
 
         self._point_pub = self.create_publisher(
             PointStamped,
-            "/apriltag_detection/position",
+            "/apriltag_detection/tag_detection",
             10,
         )
 
@@ -102,7 +105,7 @@ class AprilTagPositionNode(Node):
         self._received_caminfo = False
 
         # --- Known physical size of the tag (meters) ---
-        self._tag_size_m: float = 0.16  # CHANGE to match your tags
+        self._tag_size_m: float = 0.18  # 0.2m in sdf model - 0.02 white pixel borders
 
         self.get_logger().info("AprilTag detector node started")
 
@@ -126,6 +129,7 @@ class AprilTagPositionNode(Node):
         self._received_caminfo = True
         self.get_logger().info("Camera intrinsics received")
 
+    @rate_limit(5)
     def image_callback(self, msg: Image) -> None:
         """
         Processes incoming images, detects AprilTags,
@@ -186,13 +190,14 @@ class AprilTagPositionNode(Node):
             self.get_logger().error("Tag pose could not be estimated")
             return
         
-        X, Y, Z = pose_t.flatten()  # 3D position in camera frame
+        Y, Z, X = pose_t.flatten()  # 3D position in camera frame
         point_msg = PointStamped()
         point_msg.header = header
-        point_msg.header.frame_id = "camera_link"
+        # we are encoding the tag id in the frame_id string field of header, to pass it to the tag mapper (kind of hacky, but works)
+        point_msg.header.frame_id = CAMERA_LINK + f":=:{detection.tag_id}"
         point_msg.point.x = float(X)
-        point_msg.point.y = float(Y)
-        point_msg.point.z = float(Z)
+        point_msg.point.y = -float(Y)
+        point_msg.point.z = -float(Z)
         self._point_pub.publish(point_msg)
 
     # ------------------------------------------------------------------
@@ -200,8 +205,8 @@ class AprilTagPositionNode(Node):
     # ------------------------------------------------------------------
     def _draw_detection(self, image: np.ndarray, detection: Detection) -> None:
         """Draw bounding box, center, and ID of the AprilTag on the image."""
-        corners = detection.corners.astype(int)
-        center = tuple(detection.center.astype(int))
+        corners = detection.corners.astype(int) # type: ignore
+        center = tuple(detection.center.astype(int)) # type: ignore
 
         # Draw tag outline (green)
         for i in range(4):
@@ -215,7 +220,7 @@ class AprilTagPositionNode(Node):
         # Draw tag ID (blue)
         cv2.putText(
             image,
-            f"ID {detection.tag_id}",
+            f"ID: {detection.tag_id}",
             (center[0] + 10, center[1] - 10),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.5,
