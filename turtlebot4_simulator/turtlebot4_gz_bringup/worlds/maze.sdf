@@ -19,6 +19,11 @@
           <pose>-2.5042032026144825 0.2099361296421059 .3 1.57 0 1.57</pose>
         </include>
 
+        <include>
+          <uri>model://Apriltag36_11_00010</uri>
+          <pose>-3.5042032026144825 0.2099361296421059 .3 1.57 0 1.57</pose>
+        </include>
+
         <light name='sun' type='directional'>
             <cast_shadows>1</cast_shadows>
             <pose>0 0 10 0 -0 0</pose>

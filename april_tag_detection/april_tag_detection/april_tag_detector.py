@@ -129,7 +129,7 @@ class AprilTagPositionNode(Node):
         self._received_caminfo = True
         self.get_logger().info("Camera intrinsics received")
 
-    @rate_limit(5)
+    @rate_limit(50)
     def image_callback(self, msg: Image) -> None:
         """
         Processes incoming images, detects AprilTags,
