@@ -531,7 +531,7 @@ Visualization Manager:
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /apriltag_markers
+        Value: /apriltag_detection/apriltag_markers
       Value: true
   Enabled: true
   Global Options:

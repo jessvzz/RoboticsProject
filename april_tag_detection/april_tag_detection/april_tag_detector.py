@@ -16,10 +16,10 @@ This node:
 - Subscribes to a camera image topic (sensor_msgs/Image)
 - Subscribes to camera intrinsics (sensor_msgs/CameraInfo)
 - Detects AprilTags in the image
-- Estimates a rough 3D position of each tag relative to the camera
-- Publishes the position as geometry_msgs/PointStamped
+- Publishes the position as geometry_msgs/PointStamped on "/apriltag_detection/tag_detection" (realtive to camera frame)
+- Publishes a debug image on "/apriltag_detection/debug_image" with drawn boxes around apriltags (you can view it via rqt)
 
-Orientation is intentionally ignored.
+Orientation of tag is intentionally ignored.
 """
 
 import sys
@@ -43,14 +43,14 @@ from pupil_apriltags import Detector, Detection
 
 from .utils import rate_limit
 
-# topics published by turtlebot
+# camera topics published by turtlebot
 CAMERA_RAW_TOPIC = "/oakd/rgb/preview/image_raw"
 CAMERA_INFO_TOPIC = "/oakd/rgb/preview/camera_info"
 
 # link frame of the camera, used for publishing PointStamped
 CAMERA_LINK = "oakd_link"
 
-class AprilTagPositionNode(Node):
+class AprilTagDetectorNode(Node):
     """
     ROS 2 node for estimating the 3D position of AprilTags
     relative to the camera frame.
@@ -78,13 +78,13 @@ class AprilTagPositionNode(Node):
 
         self._point_pub = self.create_publisher(
             PointStamped,
-            "/apriltag_detection/tag_detection",
+            "tag_detection",
             10,
         )
 
         self._debug_image_pub = self.create_publisher(
             Image,
-            "/apriltag_detection/debug_image",
+            "debug_image",
             10,
         )
 
@@ -236,7 +236,7 @@ class AprilTagPositionNode(Node):
 
 def main(args: Optional[List[str]] = None) -> None:
     rclpy.init(args=args)
-    node = AprilTagPositionNode()
+    node = AprilTagDetectorNode()
     rclpy.spin(node)
     node.destroy_node()
     rclpy.shutdown()

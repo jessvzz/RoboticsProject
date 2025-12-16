@@ -10,12 +10,27 @@ from visualization_msgs.msg import Marker, MarkerArray
 import tf2_ros
 import tf2_geometry_msgs
 
-# where april_tag_detector is publishing detections
-INCOMING_TAG_DETECTION_TOPIC = '/apriltag_detection/tag_detection'
+# NB make sure to append this line "${workspaceFolder}/install/custom_interfaces/lib/python3.12/site-packages" in .vscode/settings.json under
+# the "python.analysis.extraPaths" key, otherwise vscode might fail to properly provide type hints. Of course, you must have built the ws for this to work.
+from custom_interfaces.srv import GetTagPosition
+from geometry_msgs.msg import PointStamped
+
+
+# Where april_tag_detector is publishing detections.
+# NOTE that this topic is remapped in the launch file, to account for the namespace the april_tag_detector node lives in.
+# By default, the resolved topic name is /apriltag_detection/tag_detection
+INCOMING_TAG_DETECTION_TOPIC = '/tag_detection'
 
 GLOBAL_FRAME_ID = "odom" # ideally, this should be changed to "map" when using slam
 
 class TagMapper(Node):
+    """
+    Ros2 Node for storing received tag position data from the apriltag_detector node,
+    transforming points into global coordinates and remembering their position associated with the tag id. 
+    
+    A service under /<namespace>/get_tag_position is available for other nodes to get world relative
+    coordinates of already found apriltags. By default, <namespace> is 'apriltag_detection' if you use the provided launch files. 
+    """
 
     def __init__(self):
         super().__init__('tag_mapper')
@@ -39,12 +54,48 @@ class TagMapper(Node):
         # Marker publisher
         self.marker_pub = self.create_publisher(
             MarkerArray,
-            '/apriltag_markers',
+            'apriltag_markers',
             10
+        )
+
+        # expose service for other nodes to get tags positions
+        self.get_tag_srv = self.create_service(
+            GetTagPosition,
+            'get_tag_position',
+            self.get_tag_position_callback
         )
 
         # Timer to republish markers
         self.create_timer(0.5, self.publish_markers)
+        self.get_logger().info("April tag mapper started")
+
+    def get_tag_position_callback(
+        self, 
+        request: GetTagPosition.Request, 
+        response: GetTagPosition.Response
+    ) -> GetTagPosition.Response:
+        """
+        Service callback to return the position of a tag in map frame.
+
+        Args:
+            request (GetTagPosition.Request): The request containing tag_id
+            response (GetTagPosition.Response): The response object to populate
+
+        Returns:
+            GetTagPosition.Response: Populated response with found flag and position
+        """
+        tag_id: int = request.tag_id
+        cached_point: Optional[PointStamped] = self.tag_cache.get(tag_id)
+
+        if cached_point is not None:
+            response.found = True
+            response.position = cached_point
+        else:
+            response.found = False
+            response.position = PointStamped()  # empty PointStamped
+
+        return response
+
 
     def extract_tag_id(self, msg: PointStamped) -> tuple[str, int]:
         """
@@ -59,7 +110,14 @@ class TagMapper(Node):
             return frame, -1  # unknown
 
     def process_tag_callback(self, point: PointStamped):
-
+        """
+        Converts from camera_frame coordinates to world (map or odom) coordinates,
+        populates local tags cache with tag id and its respective world position,
+        so that it can later be retrieved with 'get_tag_position' service.
+        
+        :param point: Point expressed in camera link frame coordinates where the tag was found
+        :type point: PointStamped
+        """
         frame_id, tag_id = self.extract_tag_id(point)
         if tag_id < 0:
             # tag_id is -1 if extraction failed
@@ -67,7 +125,7 @@ class TagMapper(Node):
             return
 
         try:
-            # Lookup transform: camera_frame → map
+            # Lookup transform: camera_frame -> map
             transform = self.tf_buffer.lookup_transform(
                 GLOBAL_FRAME_ID,                    # target frame
                 frame_id,      # source frame
@@ -123,7 +181,7 @@ class TagMapper(Node):
             marker.color.b = 0.2
             marker.color.a = 1.0
 
-            marker_array.markers.append(marker)
+            marker_array.markers.append(marker) # type: ignore
 
         self.marker_pub.publish(marker_array)
 

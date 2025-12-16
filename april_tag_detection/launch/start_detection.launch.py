@@ -9,10 +9,13 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
 
+    system_namespace = "apriltag_detection"
+
     start_detection_node = Node(
         package='april_tag_detection',
         executable='start_detection',
         name='april_tag_detector',
+        namespace=system_namespace,
         output='screen'
     )
 
@@ -20,7 +23,11 @@ def generate_launch_description():
         package='april_tag_detection',
         executable='start_mapping_srv',
         name='tag_mapper',
-        output='screen'
+        namespace=system_namespace,
+        output='screen',
+        remappings=[
+            ('/tag_detection', f'/{system_namespace}/tag_detection')
+        ]
     )
 
     return LaunchDescription([
