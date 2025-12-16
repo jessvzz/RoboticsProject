@@ -1,5 +1,3 @@
-#!/home/americo/coding/ros2_ws/.venv/bin/python3
-# #!/usr/bin/env python3
 """
 MAKE SURE TO RUN:
 sudo apt install ros-jazzy-cv-bridge

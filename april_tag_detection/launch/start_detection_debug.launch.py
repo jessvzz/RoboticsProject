@@ -29,7 +29,7 @@ def generate_launch_description():
 
     start_mapping_srv_node = Node(
         package='april_tag_detection',
-        executable='start_mapping_srv',
+        executable='start_tag_mapping',
         name='tag_mapper',
         namespace=system_namespace,
         output='screen',
