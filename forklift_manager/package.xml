@@ -3,7 +3,8 @@
 <package format="3">
   <name>forklift_manager</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <description>Package that handles interaction with the forklift hardware (simulated
+  or physical) and exposes services for performing grab/release actions.</description>
   <maintainer email="americo.cherubini2003@gmail.com">americo</maintainer>
   <license>TODO: License declaration</license>
 
