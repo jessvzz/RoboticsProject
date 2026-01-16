@@ -29,7 +29,12 @@ class TagMapper(Node):
     transforming points into global coordinates and remembering their position associated with the tag id. 
     
     A service under /<namespace>/get_tag_position is available for other nodes to get world relative
-    coordinates of already found apriltags. By default, <namespace> is 'apriltag_detection' if you use the provided launch files. 
+    coordinates of already found apriltags. By default, <namespace> is 'apriltag_detection' if you use the provided launch files.t this topic is remapped in the launch file, to account for the namespace the april_tag_detector node lives in.
+# By default, the resolved topic name is /apriltag_detection/tag_detection
+INCOMING_TAG_DETECTION_TOPIC = '/tag_detection'
+
+GLOBAL_FRAME_ID = "odom" # ideally, this should be changed to "map" when using slam
+ 
     """
 
     def __init__(self):
