@@ -1,0 +1,1 @@
+This package should expose an interface to other nodes to perform actions related to the forklift mechanism. For example, it could expose a "grab" and "release" services, that other nodes (i.e. behaviour tree) could use to perform actions such as grabbing / releasing a physical package in front of the robot.
