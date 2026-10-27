@@ -1,0 +1,11 @@
+working baseline robot with gz integration
+
+Added a new package wich defines a diff drive robot from scratch, has separate launch files for:
+- launching gz with a custom world
+- spawning the robot in gz
+- bridging the gz /cmd_vel and /odom topics from the diffdrive plugin with ROS
+
+Result:
+we can control the diff drive robot from ros via /cmd_vel and obtain odometry via /odom. 
+
+The whole system launches with simulation.launch.py

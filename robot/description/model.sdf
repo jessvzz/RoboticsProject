@@ -1,7 +1,6 @@
 <?xml version="1.0"?>
 <sdf version="1.9">
   <model name="my_robot">
-    <pose>0 0 0.15 0 0 0</pose>
     <self_collide>false</self_collide>
 
     <!-- Main chassis -->
@@ -41,7 +40,7 @@
 
     <!-- Left drive wheel -->
     <link name="left_wheel">
-      <pose>0 0.18 -0.05 1.5707963 0 0</pose>
+      <pose>0.05 0.18 -0.05 1.5707963 0 0</pose>
 
       <inertial>
         <mass>0.3</mass>
@@ -90,7 +89,7 @@
       <parent>base_link</parent>
       <child>left_wheel</child>
       <axis>
-        <xyz>0 0 1</xyz>
+        <xyz>0 0 -1</xyz>
         <limit>
           <lower>-1e16</lower>
           <upper>1e16</upper>
@@ -103,7 +102,7 @@
 
     <!-- Right drive wheel -->
     <link name="right_wheel">
-      <pose>0 -0.18 -0.05 1.5707963 0 0</pose>
+      <pose>0.05 -0.18 -0.05 1.5707963 0 0</pose>
 
       <inertial>
         <mass>0.3</mass>
@@ -152,7 +151,7 @@
       <parent>base_link</parent>
       <child>right_wheel</child>
       <axis>
-        <xyz>0 0 1</xyz>
+        <xyz>0 0 -1</xyz>
         <limit>
           <lower>-1e16</lower>
           <upper>1e16</upper>
@@ -182,7 +181,7 @@
       <collision name="collision">
         <geometry>
           <sphere>
-            <radius>0.025</radius>
+            <radius>0.05</radius>
           </sphere>
         </geometry>
       </collision>
@@ -222,8 +221,13 @@
       <frame_id>odom</frame_id>
       <child_frame_id>base_link</child_frame_id>
 
+      <tf_topic>/model/my_robot/tf</tf_topic>
+
       <odom_publish_frequency>30</odom_publish_frequency>
     </plugin>
+
+    <plugin filename="gz-sim-joint-state-publisher-system"
+        name="gz::sim::systems::JointStatePublisher"/>
 
   </model>
 </sdf>
