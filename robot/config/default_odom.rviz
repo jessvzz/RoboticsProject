@@ -111,6 +111,8 @@ Visualization Manager:
           Value: true
         lidar_link:
           Value: true
+        map:
+          Value: true
         odom:
           Value: true
         right_wheel:
@@ -121,14 +123,15 @@ Visualization Manager:
       Show Axes: true
       Show Names: false
       Tree:
-        odom:
-          base_link:
-            left_wheel:
-              {}
-            lidar_link:
-              {}
-            right_wheel:
-              {}
+        map:
+          odom:
+            base_link:
+              left_wheel:
+                {}
+              lidar_link:
+                {}
+              right_wheel:
+                {}
       Update Interval: 0
       Value: true
     - Alpha: 1
@@ -211,25 +214,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 7.170302867889404
+      Distance: 10.223495483398438
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.3173716366291046
-        Y: 2.0640015602111816
-        Z: -1.067643404006958
+        X: 0.4874841868877411
+        Y: 1.0549730062484741
+        Z: -1.768925428390503
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.665398120880127
+      Pitch: 0.9203978776931763
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.973565101623535
+      Yaw: 4.783560752868652
     Saved: ~
 Window Geometry:
   Displays:
@@ -247,5 +250,5 @@ Window Geometry:
   Views:
     collapsed: true
   Width: 1200
-  X: 2712
-  Y: 294
+  X: 2593
+  Y: 200

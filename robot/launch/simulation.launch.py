@@ -7,19 +7,16 @@ from launch.actions import (
     IncludeLaunchDescription,
     TimerAction,
 )
+from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 
 
-"""
-First launches gazebo (gazebo.launch.py)
-Then, spawns the robot (spawn_robot.launch.py)
-
-"""
-
 def generate_launch_description():
     package_dir = get_package_share_directory('robot')
     launch_dir = os.path.join(package_dir, 'launch')
+
+    slam = LaunchConfiguration('slam')
 
     return LaunchDescription([
         DeclareLaunchArgument(
@@ -27,19 +24,37 @@ def generate_launch_description():
             default_value=os.path.join(
                 package_dir, 'worlds', 'empty.sdf'
             ),
+            description='Gazebo world file',
         ),
 
         DeclareLaunchArgument('x', default_value='0.0'),
         DeclareLaunchArgument('y', default_value='0.0'),
         DeclareLaunchArgument('z', default_value='0.2'),
 
-        # ros-gz bridge
+        DeclareLaunchArgument(
+            'slam',
+            default_value='true',
+            description='Enable SLAM Toolbox',
+        ),
+
+        # ROS-Gazebo bridge
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
                 os.path.join(launch_dir, 'bridge.launch.py')
             )
         ),
 
+        # RViz: choose the fixed frame based on whether SLAM is enabled
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(
+                os.path.join(launch_dir, 'rviz.launch.py')
+            ),
+            launch_arguments={
+                'slam': slam,
+            }.items(),
+        ),
+
+        # Gazebo
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
                 os.path.join(launch_dir, 'gazebo.launch.py')
@@ -49,6 +64,7 @@ def generate_launch_description():
             }.items(),
         ),
 
+        # Spawn robot after Gazebo starts
         TimerAction(
             period=1.0,
             actions=[
@@ -65,5 +81,13 @@ def generate_launch_description():
                     }.items(),
                 )
             ],
+        ),
+
+        # Start SLAM only when slam:=true
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(
+                os.path.join(launch_dir, 'slam.launch.py')
+            ),
+            condition=IfCondition(slam),
         ),
     ])
