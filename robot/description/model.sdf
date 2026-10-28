@@ -189,7 +189,7 @@
       <visual name="visual">
         <geometry>
           <sphere>
-            <radius>0.025</radius>
+            <radius>0.05</radius>
           </sphere>
         </geometry>
         <material>
@@ -313,13 +313,106 @@
             </clip>
             </camera>
         </sensor>
-        </link>
+    </link>
 
-        <joint name="camera_joint" type="fixed">
+    <joint name="camera_joint" type="fixed">
         <parent>base_link</parent>
         <child>camera_link</child>
-        </joint>
+    </joint>
 
+    <link name="forklift_carriage">
+      <!-- Initial position; the joint moves this link vertically -->
+      <pose>0.19 0 -0.2 0 0 0</pose>
+
+      <inertial>
+        <mass>.1</mass>
+        <inertia>
+          <ixx>0.02</ixx>
+          <iyy>0.02</iyy>
+          <izz>0.02</izz>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyz>0</iyz>
+        </inertia>
+      </inertial>
+
+      <!-- Carriage plate -->
+      <visual name="carriage_visual">
+        <pose>0.0 0.0 0.025 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.04 0.3 0.05</size>
+          </box>
+        </geometry>
+        <material>
+          <diffuse>1 0.1 0.05 1</diffuse>
+        </material>
+      </visual>
+
+      <!-- Left fork: extends forward along +X -->
+      <visual name="left_fork_visual">
+        <pose>0.16 0.08 0 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.25 0.06 0.01</size>
+          </box>
+        </geometry>
+        <material>
+          <diffuse>1 0.1 0.05 1</diffuse>
+        </material>
+      </visual>
+
+      <collision name="left_fork_collision">
+        <pose>0.16 0.08 0 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.25 0.06 0.01</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <!-- Right fork -->
+      <visual name="right_fork_visual">
+        <pose>0.16 -0.08 0 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.25 0.06 0.01</size>
+          </box>
+        </geometry>
+        <material>
+          <diffuse>1 0.1 0.05 1</diffuse>
+        </material>
+      </visual>
+
+      <collision name="right_fork_collision">
+        <pose>0.16 -0.08 0 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.25 0.06 0.01</size>
+          </box>
+        </geometry>
+      </collision>
+    </link>
+
+    <joint name="forklift_lift_joint" type="prismatic">
+      <parent>base_link</parent>
+      <child>forklift_carriage</child>
+
+      <axis>
+        <xyz>0 0 1</xyz>
+        <limit>
+          <lower>0.1</lower>
+          <upper>0.15</upper>
+          <effort>100</effort>
+          <velocity>0.2</velocity>
+        </limit>
+        <dynamics>
+          <damping>5.0</damping>
+          <friction>0.1</friction>
+        </dynamics>
+      </axis>
+    </joint>
+    
     <!-- Gazebo differential drive -->
     <plugin
       filename="gz-sim-diff-drive-system"
@@ -351,6 +444,24 @@
     <plugin filename="gz-sim-joint-state-publisher-system"
             name="gz::sim::systems::JointStatePublisher">
         <topic>/joint_states</topic>
+    </plugin>
+
+    <plugin
+        filename="gz-sim-joint-position-controller-system"
+        name="gz::sim::systems::JointPositionController">
+
+      <joint_name>forklift_lift_joint</joint_name>
+      <topic>/forklift/lift/position_gz</topic>
+
+      <p_gain>100</p_gain>
+      <i_gain>0</i_gain>
+      <d_gain>10</d_gain>
+
+      <i_max>10</i_max>
+      <i_min>-10</i_min>
+
+      <cmd_max>100</cmd_max>
+      <cmd_min>-100</cmd_min>
     </plugin>
   </model>
 </sdf>
