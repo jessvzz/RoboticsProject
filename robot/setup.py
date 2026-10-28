@@ -2,7 +2,26 @@ from setuptools import find_packages, setup
 import os
 from glob import glob
 
+
 package_name = 'robot'
+
+
+models_files = []
+
+for root, dirs, files in os.walk('models'):
+    if not files:
+        continue
+
+    relative_dir = os.path.relpath(root, 'models')
+    destination = os.path.join('share', package_name, 'models')
+
+    if relative_dir != '.':
+        destination = os.path.join(destination, relative_dir)
+
+    models_files.append((
+        destination,
+        [os.path.join(root, filename) for filename in files]
+    ))
 
 setup(
     name=package_name,
@@ -20,8 +39,7 @@ setup(
          glob('worlds/*')),
         (os.path.join('share', package_name, 'config'),
          glob('config/*.*')),
-        (os.path.join('share', package_name, 'models'),
-         glob('models/*')),
+         *models_files,
     ],
     install_requires=['setuptools'],
     zip_safe=True,
