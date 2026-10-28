@@ -42,8 +42,8 @@ from pupil_apriltags import Detector, Detection
 from .utils import rate_limit
 
 # camera topics published by turtlebot
-CAMERA_RAW_TOPIC = "/oakd/rgb/preview/image_raw"
-CAMERA_INFO_TOPIC = "/oakd/rgb/preview/camera_info"
+CAMERA_RAW_TOPIC = "/camera/image_raw"
+CAMERA_INFO_TOPIC = "/camera/camera_info"
 
 # link frame of the camera, used for publishing PointStamped
 CAMERA_LINK = "oakd_link"
