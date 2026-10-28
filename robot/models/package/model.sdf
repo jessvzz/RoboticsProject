@@ -26,6 +26,10 @@
             <size>0.30 0.30 0.20</size>
           </box>
         </geometry>
+        <material>
+          <ambient>0.76 0.58 0.38 1</ambient>
+          <diffuse>0.76 0.58 0.38 1</diffuse>
+        </material>
       </visual>
 
       <collision name="package_collision">
@@ -53,6 +57,9 @@
       </inertial>
       <visual name="visual">
         <geometry><box><size>00.03 0.03 0.03</size></box></geometry>
+        <material>
+          <diffuse>0.5 0.38 0.28 1</diffuse>
+        </material>
       </visual>
       <collision name="collision">
         <geometry><box><size>00.03 0.03 0.03</size></box></geometry>
@@ -72,6 +79,9 @@
       </inertial>
       <visual name="visual">
         <geometry><box><size>00.03 0.03 0.03</size></box></geometry>
+        <material>
+          <diffuse>0.5 0.38 0.28 1</diffuse>
+        </material>
       </visual>
       <collision name="collision">
         <geometry><box><size>00.03 0.03 0.03</size></box></geometry>
@@ -91,6 +101,9 @@
       </inertial>
       <visual name="visual">
         <geometry><box><size>00.03 0.03 0.03</size></box></geometry>
+        <material>
+          <diffuse>0.5 0.38 0.28 1</diffuse>
+        </material>
       </visual>
       <collision name="collision">
         <geometry><box><size>00.03 0.03 0.03</size></box></geometry>
@@ -110,6 +123,9 @@
       </inertial>
       <visual name="visual">
         <geometry><box><size>00.03 0.03 0.03</size></box></geometry>
+        <material>
+          <diffuse>0.5 0.38 0.28 1</diffuse>
+        </material>
       </visual>
       <collision name="collision">
         <geometry><box><size>00.03 0.03 0.03</size></box></geometry>

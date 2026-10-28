@@ -82,6 +82,14 @@ def launch_setup(context, package_dir, launch_dir):
             ),
             condition=IfCondition(LaunchConfiguration('slam')),
         ),
+
+        # Joypad control
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(
+                os.path.join(launch_dir, 'joy_control.launch.py')
+            ),
+            condition=IfCondition(LaunchConfiguration('joypad')),
+        ),
     ]
 
 
@@ -105,6 +113,11 @@ def generate_launch_description():
             'slam',
             default_value='true',
             description='Enable SLAM Toolbox',
+        ),
+        DeclareLaunchArgument(
+            'joypad',
+            default_value='true',
+            description='Enable Joypad control',
         ),
         OpaqueFunction(
             function=launch_setup,

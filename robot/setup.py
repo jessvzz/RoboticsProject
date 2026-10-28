@@ -43,4 +43,9 @@ setup(
     ],
     install_requires=['setuptools'],
     zip_safe=True,
+    entry_points={
+        'console_scripts': [
+            'robot_joy_control = robot.robot_joy_control:main',
+        ],
+    },
 )
