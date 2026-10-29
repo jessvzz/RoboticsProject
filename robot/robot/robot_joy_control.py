@@ -18,7 +18,7 @@ class JoyControlNode(Node):
 
         self.cmd_vel_publisher = self.create_publisher(
             Twist,
-            '/cmd_vel',
+            '/cmd_vel_joy',
             10,
         )
 

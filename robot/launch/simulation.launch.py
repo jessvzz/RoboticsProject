@@ -8,13 +8,14 @@ from launch.actions import (
     TimerAction,
     OpaqueFunction,
 )
-from launch.conditions import IfCondition
+from launch_ros.actions import Node
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 
 
 def launch_setup(context, package_dir, launch_dir):
-    slam = LaunchConfiguration('slam').perform(context)
+    mode = LaunchConfiguration('mode').perform(context).lower()
+    joypad = LaunchConfiguration('joypad').perform(context).lower() == 'true'
     world_name = LaunchConfiguration('world').perform(context)
 
     # Resolve the world path.
@@ -34,20 +35,58 @@ def launch_setup(context, package_dir, launch_dir):
             f"World file not found: {world_path}"
         )
 
-    return [
+    actions = []
+
+    # SLAM
+    slam_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(launch_dir, 'slam.launch.py')
+        )
+    )
+
+    # navigation
+    nav2_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(launch_dir, 'navigation.launch.py')
+        )
+    )
+
+    # RViz for slam / odom (nav has its own rviz config)
+    rviz_custom = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(launch_dir, 'rviz.launch.py')
+        ),
+        launch_arguments={'mode': mode}.items(),
+    )
+
+    # Joypad control
+    joy_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(launch_dir, 'joy_control.launch.py')
+        )
+    )
+
+    if joypad: actions.append(joy_launch)
+    if mode == 'slam': 
+        actions.append(slam_launch)
+        actions.append(rviz_custom)
+    elif mode == 'nav':
+        #actions.append(nav2_launch)
+        pass
+
+    return actions + [
+        # Essentials
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(
+                os.path.join(launch_dir, 'essentials.launch.py')
+            )
+        ),
+        
         # ROS-Gazebo bridge
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
                 os.path.join(launch_dir, 'bridge.launch.py')
             )
-        ),
-
-        # RViz
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(
-                os.path.join(launch_dir, 'rviz.launch.py')
-            ),
-            launch_arguments={'slam': slam}.items(),
         ),
 
         # Gazebo
@@ -74,28 +113,19 @@ def launch_setup(context, package_dir, launch_dir):
                 )
             ],
         ),
-
-        # SLAM
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(
-                os.path.join(launch_dir, 'slam.launch.py')
-            ),
-            condition=IfCondition(LaunchConfiguration('slam')),
-        ),
-
-        # Joypad control
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(
-                os.path.join(launch_dir, 'joy_control.launch.py')
-            ),
-            condition=IfCondition(LaunchConfiguration('joypad')),
-        ),
     ]
 
 
 def generate_launch_description():
     package_dir = get_package_share_directory('robot')
     launch_dir = os.path.join(package_dir, 'launch')
+
+
+    filter_params_file = os.path.join(
+        package_dir,
+        'config',
+        'scan_filter.yaml'
+    )
 
     return LaunchDescription([
         DeclareLaunchArgument(
@@ -110,9 +140,9 @@ def generate_launch_description():
         DeclareLaunchArgument('y', default_value='0.0'),
         DeclareLaunchArgument('z', default_value='0.2'),
         DeclareLaunchArgument(
-            'slam',
-            default_value='true',
-            description='Enable SLAM Toolbox',
+            'mode',
+            default_value='slam',
+            description='Mode of running the simulation. Either slam/odom/nav',
         ),
         DeclareLaunchArgument(
             'joypad',
@@ -125,5 +155,16 @@ def generate_launch_description():
                 'package_dir': package_dir,
                 'launch_dir': launch_dir,
             },
+        ),
+        Node(
+            package='laser_filters',
+            executable='scan_to_scan_filter_chain',
+            name='scan_filter_chain',
+            parameters=[filter_params_file],
+            remappings=[
+                ('scan', '/scan_raw'),
+                ('scan_filtered', '/scan'),
+            ],
+            output='screen',
         ),
     ])

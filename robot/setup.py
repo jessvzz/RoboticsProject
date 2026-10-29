@@ -37,6 +37,8 @@ setup(
          glob('description/*')),
         (os.path.join('share', package_name, 'worlds'),
          glob('worlds/*')),
+        (os.path.join('share', package_name, 'map'),
+         glob('map/*')),
         (os.path.join('share', package_name, 'config'),
          glob('config/*.*')),
          *models_files,

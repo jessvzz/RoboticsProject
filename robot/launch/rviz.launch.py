@@ -2,34 +2,33 @@ import os
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument, OpaqueFunction
+from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
-from launch.actions import DeclareLaunchArgument
-from launch.substitutions import LaunchConfiguration, PythonExpression
 
-def generate_launch_description():
+
+def launch_setup(context, *args, **kwargs):
     package_dir = get_package_share_directory('robot')
     sdf_file = os.path.join(package_dir, 'description', 'model.sdf')
+    
+    mode = LaunchConfiguration('mode').perform(context).lower()
+
+    MODES = {
+        'slam' : 'default_slam.rviz',
+        'odom' : 'default_odom.rviz',
+        'nav'  : 'default_nav.rviz'
+    }
 
     with open(sdf_file, 'r') as f:
         robot_description = f.read()
 
-    rviz_config = PythonExpression([
-        "'",
-        os.path.join(package_dir, 'config', 'default_slam.rviz'),
-        "' if '",
-        LaunchConfiguration('slam'),
-        "' == 'true' else '",
-        os.path.join(package_dir, 'config', 'default_odom.rviz'),
-        "'",
-    ])
+    rviz_config = os.path.join(
+        package_dir,
+        'config',
+        MODES[mode]
+    )
 
-    return LaunchDescription([
-        DeclareLaunchArgument(
-            'slam',
-            default_value='false',
-            description='Use map as RViz fixed frame',
-        ),
-
+    return [
         Node(
             package='robot_state_publisher',
             executable='robot_state_publisher',
@@ -49,4 +48,16 @@ def generate_launch_description():
             parameters=[{'use_sim_time': True}],
             output='screen',
         ),
+    ]
+
+
+def generate_launch_description():
+    return LaunchDescription([
+        DeclareLaunchArgument(
+            'mode',
+            default_value='odom',
+            description='Select visualization mode: slam, odom or nav',
+        ),
+
+        OpaqueFunction(function=launch_setup),
     ])
