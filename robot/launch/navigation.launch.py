@@ -37,7 +37,7 @@ def generate_launch_description():
             'map': map_file,
             'params_file': params_file,
             'use_sim_time': use_sim_time,
-            'autostart': 'false',
+            'autostart': 'false',           # launch it off, activate via rviz or service
         }.items(),
     )
 

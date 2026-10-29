@@ -70,8 +70,10 @@ def launch_setup(context, package_dir, launch_dir):
     if mode == 'slam': 
         actions.append(slam_launch)
         actions.append(rviz_custom)
+    elif mode == 'odom':
+        actions.append(rviz_custom)
     elif mode == 'nav':
-        #actions.append(nav2_launch)
+        actions.append(nav2_launch)
         pass
 
     return actions + [
